@@ -25,7 +25,7 @@ java -jar bin/Svg2VectorAndroid-1.0.2.jar "/Path/to/my/svgs"
 
 ## Build from source
 
-To build the .jar file from source, you can simply run the following and your JAR will be created in `build/libs/`.
+To build the .jar file from source, you can simply run the following and your JAR will be created in `bin/`.
 
 ```bash
 gradlew :fatJar
