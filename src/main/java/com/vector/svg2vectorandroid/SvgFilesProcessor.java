@@ -45,7 +45,7 @@ public class SvgFilesProcessor {
             EnumSet<FileVisitOption> options = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             //check first if source is a directory
             if (Files.isDirectory(sourceSvgPath)) {
-                Files.walkFileTree(sourceSvgPath, options, Integer.MAX_VALUE, new FileVisitor<>() {
+                Files.walkFileTree(sourceSvgPath, options, Integer.MAX_VALUE, new FileVisitor<Path>() {
 
                     public FileVisitResult postVisitDirectory(Path dir,
                                                               IOException exc) {

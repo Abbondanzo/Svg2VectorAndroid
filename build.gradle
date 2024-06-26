@@ -8,6 +8,17 @@ repositories {
     mavenCentral()
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(JavaVersion.VERSION_11.majorVersion))
+    }
+}
+
+tasks.compileJava {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
 //create a single Jar with all dependencies
 tasks.register('fatJar', Jar) {
     manifest {
