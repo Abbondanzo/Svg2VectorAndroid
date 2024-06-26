@@ -10,8 +10,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * Created by ravi on 18/12/17.
@@ -43,60 +41,32 @@ public class SvgFilesProcessor {
     public void process() {
         try {
             EnumSet<FileVisitOption> options = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
-            //check first if source is a directory
-            if (Files.isDirectory(sourceSvgPath)) {
-                Files.walkFileTree(sourceSvgPath, options, Integer.MAX_VALUE, new FileVisitor<Path>() {
-
-                    public FileVisitResult postVisitDirectory(Path dir,
-                                                              IOException exc) {
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    public FileVisitResult preVisitDirectory(Path dir,
-                                                             BasicFileAttributes attrs) {
-                        // Skip folder which is processing svgs to xml
-                        if (dir.equals(destinationVectorPath)) {
-                            return FileVisitResult.SKIP_SUBTREE;
-                        }
-
-                        CopyOption[] opt = new CopyOption[]{COPY_ATTRIBUTES, REPLACE_EXISTING};
-                        Path newDirectory = destinationVectorPath.resolve(sourceSvgPath.relativize(dir));
-                        try {
-                            Files.copy(dir, newDirectory, opt);
-                        } catch (FileAlreadyExistsException ex) {
-                            System.out.println("FileAlreadyExistsException " + ex);
-                        } catch (IOException x) {
-                            return FileVisitResult.SKIP_SUBTREE;
-                        }
-                        return CONTINUE;
-                    }
-
-
-                    public FileVisitResult visitFile(Path file,
-                                                     BasicFileAttributes attrs) throws IOException {
-                        convertToVector(file, destinationVectorPath.resolve(sourceSvgPath.relativize(file)));
-                        return CONTINUE;
-                    }
-
-
-                    public FileVisitResult visitFileFailed(Path file,
-                                                           IOException exc) {
-                        return CONTINUE;
-                    }
-                });
-            } else {
-                System.out.println("source not a directory");
+            // Check if source directory exists
+            if (!Files.isDirectory(sourceSvgPath)) {
+                System.out.println("Source directory does not exist");
+                return;
             }
+            // Create destination directory if it does not yet exist
+            if (!Files.isDirectory(destinationVectorPath)) {
+                Files.createDirectory(destinationVectorPath);
+            }
+
+            Files.walkFileTree(sourceSvgPath, options, Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+                public FileVisitResult visitFile(Path file,
+                                                 BasicFileAttributes attrs) throws IOException {
+                    convertToVector(file, destinationVectorPath.resolve(sourceSvgPath.relativize(file)));
+                    return CONTINUE;
+                }
+            });
 
         } catch (IOException e) {
             System.out.println("IOException " + e.getMessage());
         }
-
     }
 
     private void convertToVector(Path source, Path target) throws IOException {
         // convert only if it is .svg
-        if (source.getFileName().endsWith(".svg")) {
+        if (source.getFileName().toString().endsWith(".svg")) {
             File targetFile = getFileWithXMlExtension(target, extension, extensionSuffix);
             FileOutputStream fileOutputStream = new FileOutputStream(targetFile);
             Svg2Vector.parseSvgToXml(source, fileOutputStream);

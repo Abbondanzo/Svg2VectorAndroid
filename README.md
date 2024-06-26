@@ -37,7 +37,8 @@ gradlew :fatJar
 
 - Upgraded Android Studio tools to 31.5.0. This requires Java 11+
 - Upgraded Gradle to 8.8
-- Adds support for optionally providing an output directory via CLI
+- Added support for optionally providing an output directory via CLI
+- Added support for creating the output directory if it does not already exist
 
 ### `1.0.1` (2018-12-26)
 
