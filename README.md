@@ -1,27 +1,49 @@
 # Svg2VectorAndroid
 
-It's really troublesome to import multiple svgs in Android Studio as it is a one by one process and not batch operation.
-So if you have to import some 100 svgs, it involves navigating to Project -> New ->Vector Asset, then again browse the svg file you want
-to import, then rename if you follow any naming convention and then finally next and finish.
+Batch conversion of SVG files into Vector Drawable XML files using the same conversion tool Android Studio provides. Under the hood, it uses Android Studio's Svg2Vector implementation ([reference](https://android.googlesource.com/platform/tools/base/+/master/sdk-common/src/main/java/com/android/ide/common/vectordrawable/Svg2Vector.java)).
 
-This project helps to batch convert svg files to vector drawable xmls in one shot, with option to provide extension and extension suffix.
+
+## Java Usage
 
 Simply pass source directory path to SvgFilesProcessor and call process.
-
-Sample below:
 
 ```java
 SvgFilesProcessor processor = new SvgFilesProcessor("/Volumes/Development/Features/MySvgs");
 processor.process();
 ```
 
-This will create a new folder "ProcessedSvgs" inside source folder.
+If no destination directory is provided, this will create a new folder "ProcessedSvgs" inside source folder.
 
-It uses studio ide class Svg2Vector class implementation ([reference](https://android.googlesource.com/platform/tools/base/+/master/sdk-common/src/main/java/com/android/ide/common/vectordrawable/Svg2Vector.java))
-to parse svg and convert to xml file.
+
+## CLI Usage
 
 If you directly want to use the jar , use as below:
 
 ```bash
-java -jar Svg2VectorAndroid-1.0.1.jar "SourceDirectoryPath"
+java -jar bin/Svg2VectorAndroid-1.0.2.jar "/Path/to/my/svgs"
 ```
+
+## Build from source
+
+To build the .jar file from source, you can simply run the following and your JAR will be created in `build/libs/`.
+
+```bash
+gradlew :fatJar
+```
+
+## Changelog
+
+### `1.0.2` (2024-06-26)
+
+- Upgraded Android Studio tools to 31.5.0. This requires Java 11+
+- Upgraded Gradle to 8.8
+- Adds support for optionally providing an output directory via CLI
+
+### `1.0.1` (2018-12-26)
+
+- Upgraded Android Studio tools to 26.3.1
+
+
+### `1.0.0` (2017-12-19)
+
+- Initial release
