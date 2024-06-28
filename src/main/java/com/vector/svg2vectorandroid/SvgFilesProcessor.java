@@ -54,17 +54,26 @@ public class SvgFilesProcessor {
             Files.walkFileTree(sourceSvgPath, options, Integer.MAX_VALUE, new SimpleFileVisitor<>() {
                 public FileVisitResult visitFile(Path file,
                                                  BasicFileAttributes attrs) throws IOException {
-                    convertToVector(file, destinationVectorPath.resolve(sourceSvgPath.relativize(file)));
+                    try {
+                        convertToVector(file, destinationVectorPath.resolve(sourceSvgPath.relativize(file)));
+                    } catch (IOException e) {
+                        System.out.println("Error reading file: " + e.getMessage());
+                    } catch (IllegalStateException e) {
+                        System.out.println("Error parsing svg: " + e.getMessage());
+                    } catch (Exception e) {
+                        System.out.println("Unknown error: " + e.getMessage());
+                    }
                     return CONTINUE;
                 }
             });
-
         } catch (IOException e) {
-            System.out.println("IOException " + e.getMessage());
+            System.out.println("Error reading from files: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unknown error: " + e.getMessage());
         }
     }
 
-    private void convertToVector(Path source, Path target) throws IOException {
+    private void convertToVector(Path source, Path target) throws IOException, IllegalStateException {
         // convert only if it is .svg
         if (source.getFileName().toString().endsWith(".svg")) {
             File targetFile = getFileWithXMlExtension(target, extension, extensionSuffix);
@@ -88,5 +97,4 @@ public class SvgFilesProcessor {
         svgBaseFile.append(extension);
         return new File(svgBaseFile.toString());
     }
-
 }

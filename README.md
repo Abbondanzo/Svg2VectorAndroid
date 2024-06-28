@@ -20,7 +20,7 @@ If no destination directory is provided, this will create a new folder "Processe
 If you directly want to use the jar , use as below:
 
 ```bash
-java -jar bin/Svg2VectorAndroid-1.0.2.jar "/Path/to/my/svgs"
+java -jar bin/Svg2VectorAndroid.jar "/Path/to/my/svgs"
 ```
 
 ## Build from source
@@ -32,6 +32,11 @@ gradlew :fatJar
 ```
 
 ## Changelog
+
+### `1.0.3` (2024-06-28)
+
+- Added exception handling to file conversion
+- Removed old JAR binaries for a single, latest binary
 
 ### `1.0.2` (2024-06-26)
 

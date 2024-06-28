@@ -27,6 +27,7 @@ tasks.register('fatJar', Jar) {
                 'Main-Class': 'com.vector.svg2vectorandroid.Runner'
     }
     archiveBaseName = project.name
+    archiveFileName = "${project.name}.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     doFirst {
         from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
