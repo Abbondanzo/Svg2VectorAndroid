@@ -36,6 +36,7 @@ gradlew :fatJar
 ### `1.0.3` (2024-06-28)
 
 - Added exception handling to file conversion
+- Replaced a check that skips parsing the generated output directory
 - Removed old JAR binaries for a single, latest binary
 
 ### `1.0.2` (2024-06-26)

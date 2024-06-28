@@ -10,6 +10,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 /**
  * Created by ravi on 18/12/17.
@@ -32,8 +33,8 @@ public class SvgFilesProcessor {
 
     public SvgFilesProcessor(String sourceSvgDirectory, String destinationVectorDirectory, String extension,
                              String extensionSuffix) {
-        this.sourceSvgPath = Paths.get(sourceSvgDirectory);
-        this.destinationVectorPath = Paths.get(destinationVectorDirectory);
+        this.sourceSvgPath = Paths.get(sourceSvgDirectory).normalize();
+        this.destinationVectorPath = Paths.get(destinationVectorDirectory).normalize();
         this.extension = extension;
         this.extensionSuffix = extensionSuffix;
     }
@@ -62,6 +63,14 @@ public class SvgFilesProcessor {
                         System.out.println("Error parsing svg: " + e.getMessage());
                     } catch (Exception e) {
                         System.out.println("Unknown error: " + e.getMessage());
+                    }
+                    return CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (dir.normalize().equals(destinationVectorPath)) {
+                        return SKIP_SUBTREE;
                     }
                     return CONTINUE;
                 }
