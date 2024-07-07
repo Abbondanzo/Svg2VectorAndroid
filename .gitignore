@@ -12,6 +12,7 @@
 # Generated files
 gen/
 out/
+examples/output/
 
 # Gradle files
 .gradle/
