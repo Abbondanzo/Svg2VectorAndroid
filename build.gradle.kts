@@ -1,5 +1,6 @@
 plugins {
   `kotlin-dsl`
+  alias(libs.plugins.shadow)
   id("java")
 }
 
@@ -7,6 +8,9 @@ repositories {
   maven("https://maven.google.com")
   mavenCentral()
 }
+
+group = "com.vector.svg2vectorandroid"
+version = "1.1.0"
 
 buildscript {
   repositories {
@@ -28,16 +32,20 @@ tasks.compileJava {
   targetCompatibility = JavaVersion.VERSION_11.majorVersion
 }
 
+tasks {
+  shadowJar {
+    minimize()
+  }
+}
+
 //create a single Jar with all dependencies
 tasks.register("fatJar", Jar::class.java) {
-  group = "com.vector.svg2vectorandroid"
-  version = "1.1.0"
-
+  group = "build"
   manifest {
     attributes(
       "Implementation-Title" to "Svg2VectorAndroid",
-      "Implementation-Version" to version,
-      "Main-Class" to "$group.Runner"
+      "Implementation-Version" to "${rootProject.version}",
+      "Main-Class" to "${rootProject.group}.Runner"
     )
   }
   archiveBaseName = project.name
@@ -46,7 +54,14 @@ tasks.register("fatJar", Jar::class.java) {
   doFirst {
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   }
-  exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
+  exclude(
+    "META-INF/*.RSA",
+    "META-INF/*.SF",
+    "META-INF/*.DSA",
+    "*.kotlin_module",
+    "*.kotlin_metadata",
+    "META-INF/maven/*",
+  )
   with(tasks.jar.get())
   destinationDirectory = project.file("bin")
 }
