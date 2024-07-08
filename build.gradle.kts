@@ -1,12 +1,6 @@
 plugins {
   `kotlin-dsl`
-  alias(libs.plugins.shadow)
   id("java")
-}
-
-repositories {
-  maven("https://maven.google.com")
-  mavenCentral()
 }
 
 group = "com.vector.svg2vectorandroid"
@@ -23,23 +17,17 @@ buildscript {
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(JavaVersion.VERSION_11.majorVersion))
+    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get()))
   }
 }
 
 tasks.compileJava {
-  sourceCompatibility = JavaVersion.VERSION_11.majorVersion
-  targetCompatibility = JavaVersion.VERSION_11.majorVersion
+  sourceCompatibility = libs.versions.java.get()
+  targetCompatibility = libs.versions.java.get()
 }
 
-tasks {
-  shadowJar {
-    minimize()
-  }
-}
-
-//create a single Jar with all dependencies
-tasks.register("fatJar", Jar::class.java) {
+// Create a single Jar with all dependencies
+val fatJar = tasks.register("fatJar", Jar::class.java) {
   group = "build"
   manifest {
     attributes(
@@ -51,6 +39,8 @@ tasks.register("fatJar", Jar::class.java) {
   archiveBaseName = project.name
   archiveFileName = "${project.name}.jar"
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  // Output classpath exceeds 2^16 ZIP capacity
+  isZip64 = true
   doFirst {
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   }
@@ -58,12 +48,35 @@ tasks.register("fatJar", Jar::class.java) {
     "META-INF/*.RSA",
     "META-INF/*.SF",
     "META-INF/*.DSA",
-    "*.kotlin_module",
-    "*.kotlin_metadata",
-    "META-INF/maven/*",
   )
   with(tasks.jar.get())
-  destinationDirectory = project.file("bin")
+}
+
+val r8: Configuration by configurations.creating
+
+// Use Google's R8 to compress the jar
+tasks.register("compressFatJar", JavaExec::class.java) {
+  group = "build"
+  dependsOn(fatJar)
+  // Ensure we use the same executor version as our Jar was created
+  javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+  val fatJarFile = fatJar.get().archiveFile
+  inputs.file(fatJarFile)
+  val proguardFile = file("src/main/proguard-rules.pro")
+  inputs.file(proguardFile)
+  val outputFile = layout.buildDirectory.file("libs/r8.jar").get().asFile
+  outputs.file(outputFile)
+  classpath = r8
+  mainClass = "com.android.tools.r8.R8"
+  args =
+    listOf(
+      "--release",
+      "--classfile",
+      "--output", outputFile.path,
+      "--pg-conf", proguardFile.path,
+      "--lib", System.getProperty("java.home").toString(),
+      fatJarFile.get().toString(),
+    )
 }
 
 dependencies {
@@ -71,5 +84,6 @@ dependencies {
   implementation(libs.android.tools.sdk)
   implementation(libs.kotlin.stdlib)
   testImplementation(libs.junit)
-}
 
+  r8(libs.r8)
+}

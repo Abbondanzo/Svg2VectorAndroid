@@ -1,6 +1,7 @@
 [versions]
 android-tools = "31.5.0"
-kotlin = "2.0.0"
+java = "11"
+kotlin = "1.9.22"
 
 [libraries]
 android-tools-common = { module = "com.android.tools:common", version.ref = "android-tools" }
@@ -8,7 +9,4 @@ android-tools-sdk = { module = "com.android.tools:sdk-common", version.ref = "an
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 junit = "junit:junit:4.13.1"
-shadow = { module = "com.github.johnrengelman:shadow", version = "8.1.1" }
-
-[plugins]
-shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+r8 = "com.android.tools:r8:8.2.47"
