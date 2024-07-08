@@ -71,6 +71,13 @@ tasks.register("fatJar", Jar::class.java) {
 
 val fatJar = tasks.register<Jar>("uberJar") {
   archiveClassifier = "uber"
+  manifest {
+    attributes(
+      "Implementation-Title" to "Svg2VectorAndroid",
+      "Implementation-Version" to "${rootProject.version}",
+      "Main-Class" to "${rootProject.group}.Runner"
+    )
+  }
   // Remove duplicate index lists and notification files
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   // Output classpath exceeds 2^16 ZIP capacity
