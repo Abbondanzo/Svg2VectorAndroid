@@ -1,7 +1,6 @@
 plugins {
   `kotlin-dsl`
   id("java")
-  application
 }
 
 group = "com.vector.svg2vectorandroid"
@@ -28,6 +27,7 @@ tasks.compileJava {
 }
 
 val uberJar = tasks.register<Jar>("uberJar") {
+  group = "distribute"
   archiveClassifier = "uber"
   manifest {
     attributes(
@@ -62,8 +62,8 @@ val uberJar = tasks.register<Jar>("uberJar") {
 val r8: Configuration by configurations.creating
 
 // Use Google's R8 to compress the jar
-tasks.register("compressFatJar", JavaExec::class.java) {
-  group = "build"
+val compressUberJar = tasks.register("compressUberJar", JavaExec::class.java) {
+  group = "distribute"
   dependsOn(uberJar)
   // Ensure we use the same executor version as our Jar was created
   javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
@@ -84,6 +84,15 @@ tasks.register("compressFatJar", JavaExec::class.java) {
       "--lib", System.getProperty("java.home").toString(),
       fatJarFile.get().toString(),
     )
+}
+
+tasks.register<Copy>("prepareBinary") {
+  group = "distribute"
+  dependsOn(compressUberJar)
+  from(compressUberJar.get().outputs)
+  into(rootProject.file("bin"))
+  val fileName = compressUberJar.get().outputs.files.first().name
+  rename(fileName, "${project.name}.jar")
 }
 
 dependencies {
