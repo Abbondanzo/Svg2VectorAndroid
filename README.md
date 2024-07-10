@@ -3,13 +3,13 @@
 Batch conversion of SVG files into Vector Drawable XML files using the same conversion tool Android Studio provides. Under the hood, it uses Android Studio's Svg2Vector implementation ([reference](https://android.googlesource.com/platform/tools/base/+/master/sdk-common/src/main/java/com/android/ide/common/vectordrawable/Svg2Vector.java)).
 
 
-## Java Usage
+## Kotlin Usage
 
 Simply pass source directory path to SvgFilesProcessor and call process.
 
-```java
-SvgFilesProcessor processor = new SvgFilesProcessor("/Volumes/Development/Features/MySvgs");
-processor.process();
+```kotlin
+val processor = SvgFilesProcessor("/Volumes/Development/Features/MySvgs")
+processor.process()
 ```
 
 If no destination directory is provided, this will create a new folder "ProcessedSvgs" inside source folder.
