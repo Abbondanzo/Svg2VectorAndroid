@@ -85,13 +85,25 @@ val fatJar = tasks.register<Jar>("uberJar") {
   from(sourceSets.main.get().output)
   dependsOn(configurations.runtimeClasspath)
 
+  configurations.runtimeClasspath.get().forEach { println(it.name) }
+  println("YES")
+  configurations.runtimeClasspath.get().allDependencies.forEach { println(it) }
+
+//  println(configurations.runtimeClasspath.get().)
+  println("NO")
+
   from({
     val usedDependencies = mutableSetOf<String>()
+    configurations.runtimeClasspath.get().forEach { println(it.name) }
+    println(configurations.runtimeClasspath.get().artifacts)
+
     configurations.runtimeClasspath
       .get()
-      .filter { it.name.endsWith("jar") && !usedDependencies.contains(it.name) }
+      .filter { it.name.endsWith("jar") && !it.name.contains("gradle") }
       .onEach {
-        println(it.path)
+//        println(it.path)
+//        println(it.isDirectory)
+//        println(it.)
 //        usedDependencies.add(it.name)
       }
       .map { zipTree(it) }
@@ -101,12 +113,12 @@ val fatJar = tasks.register<Jar>("uberJar") {
     "META-INF/*.SF",
     "META-INF/*.DSA",
     // Explicit duplicate class removals (with the included version in the comments)
-    "org/gradle/internal/impldep/META-INF/versions/9/com/jcraft/jsch/**", // version 10
-    "org/gradle/internal/impldep/META-INF/versions/9/org/codehaus/plexus/**", // version 10
-    "org/gradle/internal/impldep/META-INF/versions/15/org/bouncycastle/**", // version 11
-    "org/gradle/internal/impldep/META-INF/versions/17/com/fasterxml/jackson/core/**", // version 11
-    "org/gradle/internal/impldep/META-INF/versions/21/com/fasterxml/jackson/core/**", // version 11
-    "org/gradle/internal/impldep/META-INF/**",
+//    "org/gradle/internal/impldep/META-INF/versions/9/com/jcraft/jsch/**", // version 10
+//    "org/gradle/internal/impldep/META-INF/versions/9/org/codehaus/plexus/**", // version 10
+//    "org/gradle/internal/impldep/META-INF/versions/15/org/bouncycastle/**", // version 11
+//    "org/gradle/internal/impldep/META-INF/versions/17/com/fasterxml/jackson/core/**", // version 11
+//    "org/gradle/internal/impldep/META-INF/versions/21/com/fasterxml/jackson/core/**", // version 11
+//    "org/gradle/internal/impldep/META-INF/**",
   )
   doLast {
     exclude(
@@ -144,12 +156,8 @@ tasks.register("compressFatJar", JavaExec::class.java) {
 }
 
 dependencies {
-  implementation(libs.android.tools.common) {
-    exclude("org.bouncycastle:bcprov-jdk18on")
-  }
-  implementation(libs.android.tools.sdk) {
-    exclude("org.bouncycastle:bcprov-jdk18on")
-  }
+  implementation(libs.android.tools.common)
+  implementation(libs.android.tools.sdk)
   implementation(libs.kotlin.stdlib)
   testImplementation(libs.junit)
 
