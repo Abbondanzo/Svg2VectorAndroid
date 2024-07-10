@@ -22,54 +22,12 @@ java {
   }
 }
 
-application {
-  mainModule = "com.vector.svg2vectorandroid" // name defined in module-info.java
-  mainClass = "com.vector.svg2vectorandroid.Runner"
-}
-
-distributions {
-  main {
-    contents {
-      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-  }
-}
-
 tasks.compileJava {
   sourceCompatibility = libs.versions.java.get()
   targetCompatibility = libs.versions.java.get()
 }
 
-// Create a single Jar with all dependencies
-tasks.register("fatJar", Jar::class.java) {
-  group = "build"
-  manifest {
-    attributes(
-      "Implementation-Title" to "Svg2VectorAndroid",
-      "Implementation-Version" to "${rootProject.version}",
-      "Main-Class" to "${rootProject.group}.Runner"
-    )
-  }
-  archiveBaseName = project.name
-  archiveFileName = "${project.name}.jar"
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  // Output classpath exceeds 2^16 ZIP capacity
-  isZip64 = true
-  from(
-    configurations.runtimeClasspath.get()
-      .map { if (it.isDirectory) it else zipTree(it) }
-  )
-  exclude(
-    "META-INF/*.RSA",
-    "META-INF/*.SF",
-    "META-INF/*.DSA",
-//    "META-INF/INDEX.LIST",
-//    "META-INF/LICENSE",
-  )
-  with(tasks.jar.get())
-}
-
-val fatJar = tasks.register<Jar>("uberJar") {
+val uberJar = tasks.register<Jar>("uberJar") {
   archiveClassifier = "uber"
   manifest {
     attributes(
@@ -82,50 +40,23 @@ val fatJar = tasks.register<Jar>("uberJar") {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   // Output classpath exceeds 2^16 ZIP capacity
   isZip64 = true
+  // Include source files here
   from(sourceSets.main.get().output)
+  // Ensure configuration is fully set up
   dependsOn(configurations.runtimeClasspath)
-
-  configurations.runtimeClasspath.get().forEach { println(it.name) }
-  println("YES")
-  configurations.runtimeClasspath.get().allDependencies.forEach { println(it) }
-
-//  println(configurations.runtimeClasspath.get().)
-  println("NO")
-
+  // Include all dependencies in the uber jar
   from({
-    val usedDependencies = mutableSetOf<String>()
-    configurations.runtimeClasspath.get().forEach { println(it.name) }
-    println(configurations.runtimeClasspath.get().artifacts)
-
     configurations.runtimeClasspath
       .get()
+      // Explicitly omit Gradle as a dependency, since it includes itself
       .filter { it.name.endsWith("jar") && !it.name.contains("gradle") }
-      .onEach {
-//        println(it.path)
-//        println(it.isDirectory)
-//        println(it.)
-//        usedDependencies.add(it.name)
-      }
       .map { zipTree(it) }
   })
   exclude(
     "META-INF/*.RSA",
     "META-INF/*.SF",
     "META-INF/*.DSA",
-    // Explicit duplicate class removals (with the included version in the comments)
-//    "org/gradle/internal/impldep/META-INF/versions/9/com/jcraft/jsch/**", // version 10
-//    "org/gradle/internal/impldep/META-INF/versions/9/org/codehaus/plexus/**", // version 10
-//    "org/gradle/internal/impldep/META-INF/versions/15/org/bouncycastle/**", // version 11
-//    "org/gradle/internal/impldep/META-INF/versions/17/com/fasterxml/jackson/core/**", // version 11
-//    "org/gradle/internal/impldep/META-INF/versions/21/com/fasterxml/jackson/core/**", // version 11
-//    "org/gradle/internal/impldep/META-INF/**",
   )
-  doLast {
-    exclude(
-      "META-INF/versions/15/org/bouncycastle/**",
-      "org/gradle/internal/impldep/META-INF/versions/15/org/bouncycastle/**",
-    )
-  }
 }
 
 val r8: Configuration by configurations.creating
@@ -133,10 +64,10 @@ val r8: Configuration by configurations.creating
 // Use Google's R8 to compress the jar
 tasks.register("compressFatJar", JavaExec::class.java) {
   group = "build"
-  dependsOn(fatJar)
+  dependsOn(uberJar)
   // Ensure we use the same executor version as our Jar was created
   javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-  val fatJarFile = fatJar.get().archiveFile
+  val fatJarFile = uberJar.get().archiveFile
   inputs.file(fatJarFile)
   val proguardFile = file("src/main/proguard-rules.pro")
   inputs.file(proguardFile)
@@ -161,7 +92,5 @@ dependencies {
   implementation(libs.kotlin.stdlib)
   testImplementation(libs.junit)
 
-  r8(libs.r8) {
-    exclude("org.bouncycastle:bcprov-jdk18on")
-  }
+  r8(libs.r8)
 }
