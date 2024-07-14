@@ -8,3 +8,8 @@
 }
 
 -dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn org.xmlpull.v1.**
+-dontwarn org.kxml2.io.**
+
+-keep class org.xmlpull.** { *; }
+-keepclassmembers class org.xmlpull.** { *; }
