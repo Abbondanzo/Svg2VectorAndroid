@@ -4,21 +4,34 @@ Batch conversion of SVG files into Vector Drawable XML files using the same conv
 
 ## Kotlin Usage
 
-Simply pass source directory path to SvgFilesProcessor and call process.
+Simply pass a config with your source directory path to SvgFilesProcessor and call process.
 
 ```kotlin
-val processor = SvgFilesProcessor("/Volumes/Development/Features/MySvgs")
+val config = SvgFilesProcessorConfig("/Volumes/Development/Features/MySvgs")
+val processor = SvgFilesProcessor(config)
 processor.process()
 ```
 
-If no destination directory is provided, this will create a new folder "ProcessedSvgs" inside source folder.
+If no destination directory is provided, this will create a new folder "generated" inside source folder.
+
+### Config options
+
+| Option                            | Type      | Description                                                                                                              |
+| --------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `sourceDirectory`                 | `String`  | The path to a folder containing your SVGs.                                                                               |
+| `destinationDirectory` (optional) | `String`  | The path to a folder where generated XML files should go. Defaults to a subfolder "generated" in your `sourceDirectory`. |
+| `logSkipped` (optional)           | `Boolean` | If true, logs out the files walked over but not processed by the XML converted. Defaults to false.                       |
 
 ## CLI Usage
 
 If you directly want to use the jar , use as below:
 
 ```bash
+# No destination
 java -jar bin/Svg2VectorAndroid.jar "/Path/to/my/svgs"
+
+# Or with a destination
+java -jar bin/Svg2VectorAndroid.jar "/Path/to/my/svgs" "/Path/to/generated/xmls/"
 ```
 
 ## Build from source
@@ -26,7 +39,7 @@ java -jar bin/Svg2VectorAndroid.jar "/Path/to/my/svgs"
 To build the .jar file from source, you can simply run the following and your JAR will be created in `bin/`.
 
 ```bash
-gradlew :fatJar
+gradlew :prepareBinary
 ```
 
 ## Changelog

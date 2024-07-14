@@ -8,64 +8,48 @@ import java.nio.file.FileVisitOption
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.EnumSet
+import kotlin.io.path.Path
 
-class SvgFilesProcessor(
-  sourceSvgDirectory: String,
-  destinationVectorDirectory: String? = null,
-  private val extension: String = "xml",
-  private val extensionSuffix: String = ""
-) {
-  private val sourceSvgPath: Path = Paths.get(sourceSvgDirectory).normalize()
-  private val destinationVectorPath: Path =
-    Paths.get(destinationVectorDirectory ?: "$sourceSvgDirectory${File.pathSeparator}ProcessedSVG").normalize()
+class SvgFilesProcessor(private val config: SvgFilesProcessorConfig) {
 
+  @Throws(IllegalStateException::class)
   fun process() {
     try {
       val options = EnumSet.of(FileVisitOption.FOLLOW_LINKS)
       // Check if source directory exists
-      if (!Files.isDirectory(sourceSvgPath)) {
-        println("Source directory does not exist")
-        return
+      if (!Files.isDirectory(config.source)) {
+        error("Source directory does not exist")
       }
       // Create destination directory if it does not yet exist
-      if (!Files.isDirectory(destinationVectorPath)) {
-        Files.createDirectory(destinationVectorPath)
+      if (!Files.isDirectory(config.destination)) {
+        Files.createDirectory(config.destination)
       }
 
-      Files.walkFileTree(sourceSvgPath, options, Int.MAX_VALUE, object : SimpleFileVisitor<Path>() {
+      Files.walkFileTree(config.source, options, Int.MAX_VALUE, object : SimpleFileVisitor<Path>() {
         @Throws(IOException::class)
         override fun visitFile(
           file: Path,
           attrs: BasicFileAttributes
         ): FileVisitResult {
           try {
-            convertToVector(file, destinationVectorPath.resolve(sourceSvgPath.relativize(file)))
+            convertToVector(file, config.destination.resolve(config.source.relativize(file)))
           } catch (e: IOException) {
-            println("Error reading file: " + e.message)
+            System.err.println("Error reading file: ${e.message}")
           } catch (e: IllegalStateException) {
-            println("Error parsing svg: " + e.message)
+            System.err.println("Error parsing svg: ${e.message}")
           } catch (e: Exception) {
-            println("Unknown error: " + e.message)
-          }
-          return FileVisitResult.CONTINUE
-        }
-
-        @Throws(IOException::class)
-        override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
-          if (dir.normalize() == destinationVectorPath) {
-            return FileVisitResult.SKIP_SUBTREE
+            System.err.println("Unknown error: ${e.message}")
           }
           return FileVisitResult.CONTINUE
         }
       })
     } catch (e: IOException) {
-      println("Error reading from files: " + e.message)
+      error("Error reading from files: ${e.message}")
     } catch (e: Exception) {
-      println("Unknown error: " + e.message)
+      error("Unknown error: ${e.message}")
     }
   }
 
@@ -73,25 +57,17 @@ class SvgFilesProcessor(
   private fun convertToVector(source: Path, target: Path) {
     // convert only if it is .svg
     if (source.fileName.toString().endsWith(".svg")) {
-      val targetFile = getFileWithXMlExtension(target, extension, extensionSuffix)
+      val targetFile = getFileWithXMlExtension(target)
       val fileOutputStream = FileOutputStream(targetFile)
       Svg2Vector.parseSvgToXml(source, fileOutputStream)
-    } else {
-      println("Skipping file as its not svg " + source.fileName)
+    } else if (config.logSkipped) {
+      System.err.println("Skipping file: ${source.fileName}")
     }
   }
 
-  private fun getFileWithXMlExtension(target: Path, extension: String, extensionSuffix: String?): File {
-    val svgFilePath = target.toFile().absolutePath
-    val svgBaseFile = StringBuilder()
-    val index = svgFilePath.lastIndexOf(".")
-    if (index != -1) {
-      val subStr = svgFilePath.substring(0, index)
-      svgBaseFile.append(subStr)
-    }
-    svgBaseFile.append(extensionSuffix ?: "")
-    svgBaseFile.append(".")
-    svgBaseFile.append(extension)
-    return File(svgBaseFile.toString())
+  private fun getFileWithXMlExtension(target: Path): File {
+    val targetFile = target.toFile()
+    val baseName = targetFile.nameWithoutExtension
+    return Path(targetFile.parent, "$baseName.xml").toFile()
   }
 }
